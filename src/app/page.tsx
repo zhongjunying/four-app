@@ -1,9 +1,10 @@
 import { revalidatePath } from 'next/cache'
-import { neon } from '@neondatabase/serverless'
+import { neon } from '@neondatabase/serverless' //orm 库
 const sql = neon(`${process.env.DATABASE_URL}`)
 
 export default async function Page() {
-  const result = await sql('SELECT * FROM users')
+  const result = await sql('SELECT * FROM users') //服务器环境下就可以使用
+  console.log(result,process.env.DATABASE_URL)
   async function createAction(formData: FormData) {
     'use server'
     const username = formData.get('username')
