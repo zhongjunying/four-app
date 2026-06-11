@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
-import { registerAction } from "@/actions/users"
-import { useState } from 'react'
+import { registerAction, sendCodeAction } from "@/actions/users"
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 
 const formSchema = z.object({
@@ -28,6 +28,9 @@ const formSchema = z.object({
         .string()
         .min(6, "Password must be at least 6 characters.")
         .max(100, "Password must be at most 100 characters."),
+    code: z
+        .string()
+        .length(6, "Verification code must be 6 digits."),
 })
 
 export default function Register({ setNotAccountType }: { setNotAccountType: (type: NotAccountType) => void }) {
@@ -37,19 +40,52 @@ export default function Register({ setNotAccountType }: { setNotAccountType: (ty
             email: "",
             account: "",
             password: "",
+            code: "",
         },
     })
 
     const [isRegister, setIsRegister] = useState(false)
+    const [isSending, setIsSending] = useState(false)
+    const [countdown, setCountdown] = useState(0)
+
+    // Countdown timer
+    useEffect(() => {
+        if (countdown <= 0) return
+        const timer = setInterval(() => {
+            setCountdown(prev => prev - 1)
+        }, 1000)
+        return () => clearInterval(timer)
+    }, [countdown])
+
+    const handleSendCode = useCallback(async () => {
+        const email = form.getValues("email")
+        // Validate email before sending
+        const emailResult = z.string().email().safeParse(email)
+        if (!emailResult.success) {
+            toast.error("Please enter a valid email first.", { position: "top-center" })
+            return
+        }
+
+        setIsSending(true)
+        try {
+            const result = await sendCodeAction(email)
+            if (result.status === 200) {
+                toast.success("Verification code sent to your email.", { position: "top-center" })
+                setCountdown(60)
+            } else {
+                toast.error(result.data, { position: "top-center" })
+            }
+        } finally {
+            setIsSending(false)
+        }
+    }, [form])
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
-        // console.log("Form validated:", data)
         setIsRegister(true)
         try {
-            const result = await registerAction(data.account, data.password, data.email)
+            const result = await registerAction(data.account, data.password, data.email, data.code)
             if (result.status === 200) {
                 toast.success(result.data, { position: "top-center" })
-                // form.reset()
                 setNotAccountType(NotAccountType.Login)
             }
             else {
@@ -76,12 +112,51 @@ export default function Register({ setNotAccountType }: { setNotAccountType: (ty
                                     <FieldLabel htmlFor="form-rhf-register-email">
                                         Email
                                     </FieldLabel>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            {...field}
+                                            id="form-rhf-register-email"
+                                            aria-invalid={fieldState.invalid}
+                                            placeholder="Enter email"
+                                            autoComplete="off"
+                                            className="flex-1"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={isSending || countdown > 0}
+                                            onClick={handleSendCode}
+                                            className="shrink-0"
+                                        >
+                                            {isSending
+                                                ? "Sending..."
+                                                : countdown > 0
+                                                    ? `Resend (${countdown}s)`
+                                                    : "Send Code"}
+                                        </Button>
+                                    </div>
+                                    {fieldState.invalid && (
+                                        <FieldError errors={[fieldState.error]} />
+                                    )}
+                                </Field>
+
+                            )}
+                        />
+                        <Controller
+                            name="code"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel htmlFor="form-rhf-register-code">
+                                        Verification Code
+                                    </FieldLabel>
                                     <Input
                                         {...field}
-                                        id="form-rhf-register-email"
+                                        id="form-rhf-register-code"
                                         aria-invalid={fieldState.invalid}
-                                        placeholder="Enter email"
+                                        placeholder="Enter 6-digit code"
                                         autoComplete="off"
+                                        maxLength={6}
                                     />
                                     {fieldState.invalid && (
                                         <FieldError errors={[fieldState.error]} />
