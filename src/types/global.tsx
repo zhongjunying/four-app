@@ -28,3 +28,29 @@ export type CartItem = {
     quantity: number
     selectedVariant: string
 }
+
+export enum NotAccountType {
+    Login = 'login',
+    Register = 'register',
+}
+
+export type User = {
+    id: number
+    email: string
+    account: string
+    password: string
+}
+
+export type UserResponse = {
+    status: number
+    data: string
+}
+
+export type Address = {
+  id: number
+  name: string
+  city: string
+  address: string
+  phone: string
+  userid: number
+}

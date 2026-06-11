@@ -7,8 +7,12 @@ body {
 }
 
 @layer components {
-  .container {
+  /* 定义的容器 */
+  .container { 
     @apply w-[1140px] mx-auto;
+  }
+  .container-sm {
+    @apply w-[500px] mx-auto;
   }
 }
 

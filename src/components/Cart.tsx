@@ -88,7 +88,7 @@ export default function Cart() {
                             </h2>
                             <p className="text-2xl font-bold text-red-400 mb-6">${cartList.reduce((acc, cur) => acc + cur.quantity * cur.product.price, 0)}</p>
                             <Link href="/account">
-                                <Button className="w-full">Login</Button>
+                                <Button className="w-full">Check out</Button>
                             </Link>
                         </div>
                     </div>

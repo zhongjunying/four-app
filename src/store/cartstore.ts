@@ -30,6 +30,7 @@ type CartState = {
 //         }),
 //     })
 // )
+// 持久化的写法，刷新页面不会消失
 const useCartStore = create<CartState>()(
     persist(
         (set) => ({
