@@ -19,10 +19,10 @@ import {
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useCartStore } from "@/store/index"
-export default function Cart() {
+export default function Cart({ status }: { status: number }) {
     const { cartList, updateQuantity, removeFromCart } = useCartStore()
     const quantityOptions = Array.from({ length: 10 }, (_, i) => i + 1)
-    const handleChange = (index:number,value: string) => {
+    const handleChange = (index: number, value: string) => {
         updateQuantity(index, Number(value))
     }
     return (
@@ -87,9 +87,18 @@ export default function Cart() {
                                 Total
                             </h2>
                             <p className="text-2xl font-bold text-red-400 mb-6">${cartList.reduce((acc, cur) => acc + cur.quantity * cur.product.price, 0)}</p>
-                            <Link href="/account">
-                                <Button className="w-full">Check out</Button>
-                            </Link>
+                            {status === 200 ?
+                                <Link href="/checkout">
+                                    <Button className="w-full">Checkout</Button>
+                                </Link> :
+                                <>
+                                    <Link href="/account">
+                                        <Button className="w-full">Login</Button>
+                                    </Link>
+                                    <p className="text-sm text-slate-500 text-center mt-1"> You need to login to checkout.</p>
+                                </>
+                            }
+
                         </div>
                     </div>
                 ) :
